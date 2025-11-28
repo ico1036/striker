@@ -1,110 +1,1491 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Flight Tracker - GTI657</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STRIKER | Flight Intelligence</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        #map {
-            height: 600px;
-            width: 100%;
+        :root {
+            --bg-darkest: #0a1628;
+            --bg-dark: #0d1f3c;
+            --bg-panel: #132743;
+            --bg-card: #1a3a5c;
+            --bg-hover: #234b73;
+            --border: #2a4a6d;
+            --border-light: #3d5f82;
+            --cyan: #00d4ff;
+            --cyan-dim: #0099cc;
+            --cyan-glow: rgba(0, 212, 255, 0.3);
+            --teal: #00bfa5;
+            --blue: #4fc3f7;
+            --orange: #ff9800;
+            --red: #f44336;
+            --text-primary: #ffffff;
+            --text-secondary: #a8c5e2;
+            --text-muted: #6b8db3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-darkest);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
         }
 
-        .info {
-            margin-bottom: 20px;
+        /* Header */
+        .header {
+            height: 48px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 24px;
         }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--cyan) 0%, var(--teal) 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--bg-darkest);
+        }
+
+        .logo-text {
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            margin-left: 20px;
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-panel);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: var(--bg-panel);
+            color: var(--cyan);
+        }
+
+        .header-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--cyan);
+            border-radius: 20px;
+            font-size: 11px;
+            color: var(--cyan);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--cyan);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--cyan-glow); }
+            50% { opacity: 0.8; box-shadow: 0 0 0 4px transparent; }
+        }
+
+        .time-display {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Main Layout */
+        .main {
+            display: flex;
+            height: calc(100vh - 48px);
+        }
+
+        /* Left Sidebar */
+        .sidebar-left {
+            width: 320px;
+            background: var(--bg-dark);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 12px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-title-icon {
+            width: 16px;
+            height: 16px;
+            fill: var(--cyan);
+        }
+
+        .card-badge {
+            padding: 2px 8px;
+            background: var(--cyan);
+            color: var(--bg-darkest);
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .card-content {
+            padding: 16px;
+        }
+
+        /* Flight Info Card */
+        .flight-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .flight-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flight-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .flight-info h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .flight-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .route-visual {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .route-point {
+            text-align: center;
+        }
+
+        .route-code {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .route-name {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .route-line {
+            flex: 1;
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .route-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--teal));
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .route-plane {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            filter: drop-shadow(0 0 4px var(--cyan));
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .stat-item {
+            background: var(--bg-card);
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-value.cyan { color: var(--cyan); }
+        .stat-value.orange { color: var(--orange); }
+        .stat-value.teal { color: var(--teal); }
+
+        /* Control Buttons */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 12px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .btn.active {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .btn-icon {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--cyan) 0%, var(--cyan-dim) 100%);
+            border: none;
+            color: var(--bg-darkest);
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px var(--cyan-glow);
+        }
+
+        /* Track List */
+        .track-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 12px 12px;
+        }
+
+        .track-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .track-list::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        .track-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .track-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg-panel);
+            border: 1px solid transparent;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .track-item:hover {
+            background: var(--bg-card);
+            border-color: var(--border);
+        }
+
+        .track-item.active {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: var(--cyan);
+        }
+
+        .track-time {
+            width: 65px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .track-coords {
+            flex: 1;
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .track-alt {
+            font-size: 11px;
+            color: var(--cyan);
+            font-weight: 500;
+        }
+
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            position: relative;
+            background: var(--bg-darkest);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .leaflet-container {
+            background: var(--bg-darkest);
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(10, 22, 40, 0.9) !important;
+            color: var(--text-muted) !important;
+            font-size: 10px !important;
+            padding: 4px 8px !important;
+            border-radius: 4px 0 0 0 !important;
+        }
+
+        .leaflet-control-zoom {
+            display: none;
+        }
+
+        /* Right Sidebar */
+        .sidebar-right {
+            width: 300px;
+            background: var(--bg-dark);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Position Card */
+        .position-card {
+            padding: 16px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .position-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .position-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .position-time {
+            font-size: 11px;
+            color: var(--cyan);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .position-main {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .position-alt {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .position-unit {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .position-coords {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Metrics Row */
+        .metrics-row {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metric {
+            flex: 1;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* Aircraft Card */
+        .aircraft-card {
+            padding: 16px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .aircraft-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .aircraft-icon-box {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-hover);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .aircraft-icon-box svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--cyan);
+        }
+
+        .aircraft-details {
+            flex: 1;
+        }
+
+        .aircraft-type {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .aircraft-reg {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .aircraft-status {
+            padding: 4px 10px;
+            background: rgba(0, 191, 165, 0.1);
+            border: 1px solid var(--teal);
+            border-radius: 12px;
+            font-size: 10px;
+            color: var(--teal);
+            font-weight: 500;
+        }
+
+        /* Map Overlay */
+        .map-overlay {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            z-index: 1000;
+        }
+
+        .map-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .map-btn {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .map-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .map-btn.active {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--cyan);
+        }
+
+        .map-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-dark);
+            border-top: 1px solid var(--border);
+            padding: 12px 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .timeline.visible {
+            transform: translateY(0);
+        }
+
+        .timeline-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .timeline-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timeline-title svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--cyan);
+        }
+
+        .timeline-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tl-btn {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .tl-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .tl-btn.playing {
+            background: var(--cyan);
+            border-color: var(--cyan);
+            color: var(--bg-darkest);
+        }
+
+        .tl-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .speed-select {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .timeline-bar {
+            position: relative;
+            height: 6px;
+            background: var(--bg-panel);
+            border-radius: 3px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--teal));
+            border-radius: 3px;
+            transition: width 0.1s linear;
+        }
+
+        .timeline-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .timeline-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-darkest);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border);
+            border-top-color: var(--cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Popup */
+        .leaflet-popup-content-wrapper {
+            background: var(--bg-panel) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 16px !important;
+            color: var(--text-primary) !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--bg-panel) !important;
+        }
+
+        .popup-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--cyan);
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .popup-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 4px 0;
+        }
+
+        .popup-label { color: var(--text-muted); }
+        .popup-value { color: var(--text-primary); font-weight: 500; }
     </style>
 </head>
-
 <body>
-    <h1>Flight Tracker: GTI657</h1>
-    <div class="info" id="flight-info">Loading...</div>
-    <div id="map"></div>
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading flight data...</div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <span class="logo-text">STRIKER</span>
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-tab active">Live</button>
+            <button class="nav-tab">Data</button>
+            <button class="nav-tab">Analysis</button>
+        </div>
+        <div class="header-right">
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                Live Tracking
+            </div>
+            <div class="time-display" id="sys-time">--:--:--</div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <div class="main">
+        <!-- Left Sidebar -->
+        <aside class="sidebar-left">
+            <!-- Flight Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                        Flight Tracking
+                    </div>
+                    <span class="card-badge" id="track-count">0</span>
+                </div>
+                <div class="card-content">
+                    <div class="flight-header">
+                        <div class="flight-icon">
+                            <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                        </div>
+                        <div class="flight-info">
+                            <h2 id="flight-id">GTI657</h2>
+                            <span id="aircraft-type">Boeing 747-400F</span>
+                        </div>
+                    </div>
+                    <div class="route-visual">
+                        <div class="route-point">
+                            <div class="route-code" id="origin">ORD</div>
+                            <div class="route-name">Chicago</div>
+                        </div>
+                        <div class="route-line">
+                            <div class="route-progress" id="route-progress" style="width: 60%"></div>
+                            <div class="route-plane" id="route-plane" style="left: 60%">✈</div>
+                        </div>
+                        <div class="route-point">
+                            <div class="route-code" id="destination">ICN</div>
+                            <div class="route-name">Seoul</div>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Altitude</div>
+                            <div class="stat-value cyan" id="stat-alt">---</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Ground Speed</div>
+                            <div class="stat-value" id="stat-speed">---</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Heading</div>
+                            <div class="stat-value" id="stat-heading">---</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value teal" id="stat-status">Airborne</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button class="btn active" id="btn-track" onclick="focusTarget()">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+                    Current Position
+                </button>
+                <button class="btn" id="btn-route" onclick="toggleRoute()">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/></svg>
+                    Full Trajectory
+                </button>
+                <button class="btn" id="btn-replay" onclick="toggleReplay()">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+                    Mission Replay
+                </button>
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                    Refresh Data
+                </button>
+            </div>
+
+            <!-- Track List -->
+            <div class="card" style="flex: 1; display: flex; flex-direction: column; margin-bottom: 12px;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg class="card-title-icon" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Track History
+                    </div>
+                </div>
+                <div class="track-list" id="track-list"></div>
+            </div>
+        </aside>
+
+        <!-- Map -->
+        <div class="map-container">
+            <div id="map"></div>
+
+            <!-- Map Controls -->
+            <div class="map-overlay">
+                <div class="map-controls">
+                    <button class="map-btn" onclick="map.zoomIn()" title="Zoom In">
+                        <svg viewBox="0 0 24 24"><path d="M12 5v14m-7-7h14"/></svg>
+                    </button>
+                    <button class="map-btn" onclick="map.zoomOut()" title="Zoom Out">
+                        <svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg>
+                    </button>
+                    <button class="map-btn" onclick="fitRoute()" title="Fit Route">
+                        <svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="timeline" id="timeline">
+                <div class="timeline-header">
+                    <div class="timeline-title">
+                        <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+                        Flight Replay
+                    </div>
+                    <div class="timeline-controls">
+                        <button class="tl-btn" onclick="replayStep(-10)">
+                            <svg viewBox="0 0 24 24"><path d="M19 20L9 12l10-8v16zM5 19V5"/></svg>
+                        </button>
+                        <button class="tl-btn" id="play-btn" onclick="togglePlay()">
+                            <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+                        </button>
+                        <button class="tl-btn" onclick="replayStep(10)">
+                            <svg viewBox="0 0 24 24"><path d="M5 4l10 8-10 8V4zM19 5v14"/></svg>
+                        </button>
+                        <select class="speed-select" id="speed-select" onchange="setSpeed(this.value)">
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="2">2x</option>
+                            <option value="5">5x</option>
+                            <option value="10">10x</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="timeline-bar">
+                    <div class="timeline-progress" id="tl-progress"></div>
+                    <input type="range" class="timeline-slider" id="tl-slider" min="0" max="100" value="100" oninput="seekReplay(this.value)">
+                </div>
+                <div class="timeline-info">
+                    <span id="tl-time">00:00:00</span>
+                    <span id="tl-point">Point 0 / 0</span>
+                    <span id="tl-duration">Duration: --:--:--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar-right">
+            <!-- Position Card -->
+            <div class="position-card">
+                <div class="position-header">
+                    <span class="position-title">Current Position</span>
+                    <span class="position-time" id="update-time">--:--:--</span>
+                </div>
+                <div class="position-main">
+                    <span class="position-alt" id="pos-alt">---</span>
+                    <span class="position-unit">ft</span>
+                </div>
+                <div class="position-coords" id="pos-coords">---.----°N, ---.----°E</div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="metrics-row">
+                <div class="metric">
+                    <div class="metric-value" id="metric-dist">---</div>
+                    <div class="metric-label">Distance</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metric-time">---</div>
+                    <div class="metric-label">Flight Time</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="metric-eta">---</div>
+                    <div class="metric-label">ETA</div>
+                </div>
+            </div>
+
+            <!-- Aircraft Info -->
+            <div class="aircraft-card">
+                <div class="card-title" style="margin-bottom: 12px;">
+                    <svg class="card-title-icon" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                    Aircraft Details
+                </div>
+                <div class="aircraft-item">
+                    <div class="aircraft-icon-box">
+                        <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                    </div>
+                    <div class="aircraft-details">
+                        <div class="aircraft-type" id="ac-type">Boeing 747-400F</div>
+                        <div class="aircraft-reg" id="ac-reg">Atlas Air Cargo</div>
+                    </div>
+                    <div class="aircraft-status">En Route</div>
+                </div>
+            </div>
+
+            <!-- Info Cards -->
+            <div style="padding: 16px; flex: 1;">
+                <div class="stats-grid" style="gap: 12px;">
+                    <div class="stat-item">
+                        <div class="stat-label">Latitude</div>
+                        <div class="stat-value" id="info-lat" style="font-size: 14px;">---</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Longitude</div>
+                        <div class="stat-value" id="info-lon" style="font-size: 14px;">---</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Track Points</div>
+                        <div class="stat-value cyan" id="info-points" style="font-size: 14px;">---</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Last Update</div>
+                        <div class="stat-value" id="info-update" style="font-size: 14px;">---</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
 
     <script>
-        const map = L.map('map').setView([0, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        const planeIcon = L.icon({
-            iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Airplane_silhouette.svg/1024px-Airplane_silhouette.svg.png',
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
-        });
-
-        let planeMarker = null;
+        // State
+        let flightData = null;
+        let map = null;
         let flightPath = null;
+        let targetMarker = null;
+        let originMarker = null;
+        let destMarker = null;
+        let replayMarker = null;
+        let replayPath = null;
+        let showRoute = true;
+        let isPlaying = false;
+        let replayIdx = 0;
+        let replaySpeed = 1;
+        let replayTimer = null;
 
-        async function updateData() {
+        // Time update
+        setInterval(() => {
+            document.getElementById('sys-time').textContent = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // Init map
+        function initMap() {
+            map = L.map('map', {
+                center: [45, 140],
+                zoom: 3,
+                zoomControl: false
+            });
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© CARTO',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        // Create aircraft icon
+        function createAircraftIcon(heading = 0, color = '#00d4ff') {
+            return L.divIcon({
+                className: 'aircraft-icon',
+                html: `<svg width="32" height="32" viewBox="0 0 24 24" style="transform: rotate(${heading}deg); filter: drop-shadow(0 0 6px ${color});">
+                    <path fill="${color}" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                </svg>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+        }
+
+        // Create airport icon
+        function createAirportIcon(code, isOrigin) {
+            const color = isOrigin ? '#00d4ff' : '#00bfa5';
+            return L.divIcon({
+                className: 'airport-icon',
+                html: `<div style="
+                    background: ${color};
+                    color: #0a1628;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 11px;
+                    font-weight: 600;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                ">${code}</div>`,
+                iconSize: [40, 20],
+                iconAnchor: [20, 10]
+            });
+        }
+
+        // Fetch data
+        async function fetchData() {
             try {
-                const response = await fetch('/api/flight-data');
-                const data = await response.json();
-
-                if (data.error) {
-                    document.getElementById('flight-info').innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
-                    return;
-                }
-
-                const pos = data.current_position;
-                const altFt = pos.altitude_feet || 'N/A';
-
-                document.getElementById('flight-info').innerHTML =
-                    `<strong>Flight:</strong> ${data.flight_id} | 
-                     <strong>Origin:</strong> ${data.origin || 'N/A'} | 
-                     <strong>Dest:</strong> ${data.destination || 'N/A'} | 
-                     <strong>Type:</strong> ${data.aircraft_type || 'N/A'}<br>
-                     <strong>Altitude:</strong> ${altFt} ft`;
-
-                // Draw route if available
-                if (data.route && data.route.length > 0) {
-                    // Remove old path if exists
-                    if (flightPath) {
-                        map.removeLayer(flightPath);
-                    }
-
-                    // Draw route polyline (lon, lat format from FlightAware)
-                    const latLngs = data.route.map(coord => [coord[1], coord[0]]);
-                    flightPath = L.polyline(latLngs, { color: 'blue', weight: 2 }).addTo(map);
-
-                    // Fit map to show entire route
-                    map.fitBounds(flightPath.getBounds());
-                }
-
-                // Update current position marker
-                if (pos.latitude && pos.longitude) {
-                    const lat = pos.latitude;
-                    const lon = pos.longitude;
-
-                    // Remove old marker if exists
-                    if (planeMarker) {
-                        map.removeLayer(planeMarker);
-                    }
-
-                    // Add new marker
-                    planeMarker = L.marker([lat, lon], { icon: planeIcon }).addTo(map);
-                    planeMarker.bindPopup(`<b>${data.flight_id}</b><br>Alt: ${altFt} ft`);
-
-                    document.getElementById('flight-info').innerHTML += `<br><strong>Position:</strong> ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
-                } else {
-                    document.getElementById('flight-info').innerHTML += '<br><span style="color: orange;">⚠️ No current position data available</span>';
-                }
+                const res = await fetch('/api/flight-data');
+                return await res.json();
             } catch (e) {
-                console.error("Error fetching data:", e);
-                document.getElementById('flight-info').innerHTML = `<span style="color: red;">Error: ${e.message}</span>`;
+                console.error(e);
+                return null;
             }
         }
 
-        updateData();
-        setInterval(updateData, 30000); // Update every 30s
+        // Update UI
+        function updateUI(data) {
+            if (!data) return;
+            flightData = data;
+
+            document.getElementById('flight-id').textContent = data.flight_id || '---';
+            document.getElementById('origin').textContent = data.origin || '---';
+            document.getElementById('destination').textContent = data.destination || '---';
+            
+            const types = { 'B744': 'Boeing 747-400F', 'B748': 'Boeing 747-8F' };
+            document.getElementById('aircraft-type').textContent = types[data.aircraft_type] || data.aircraft_type || '---';
+            document.getElementById('ac-type').textContent = types[data.aircraft_type] || data.aircraft_type || '---';
+
+            const pos = data.current_position;
+            if (pos) {
+                const alt = pos.altitude_feet || (pos.altitude_meters ? Math.round(pos.altitude_meters * 3.28084) : null);
+                document.getElementById('stat-alt').textContent = alt ? `${alt.toLocaleString()} ft` : '---';
+                document.getElementById('pos-alt').textContent = alt ? alt.toLocaleString() : '---';
+
+                // Update ground speed
+                const speed = pos.ground_speed_knots || pos.ground_speed_kmh;
+                if (speed) {
+                    const speedText = pos.ground_speed_knots ? `${Math.round(pos.ground_speed_knots)} kts` : `${Math.round(pos.ground_speed_kmh)} km/h`;
+                    document.getElementById('stat-speed').textContent = speedText;
+                }
+
+                // Update heading
+                if (pos.heading !== undefined && pos.heading !== null) {
+                    document.getElementById('stat-heading').textContent = `${Math.round(pos.heading)}°`;
+                }
+
+                if (pos.latitude && pos.longitude) {
+                    const ns = pos.latitude >= 0 ? 'N' : 'S';
+                    const ew = pos.longitude >= 0 ? 'E' : 'W';
+                    document.getElementById('pos-coords').textContent = `${Math.abs(pos.latitude).toFixed(4)}°${ns}, ${Math.abs(pos.longitude).toFixed(4)}°${ew}`;
+                    document.getElementById('info-lat').textContent = `${pos.latitude.toFixed(4)}°`;
+                    document.getElementById('info-lon').textContent = `${pos.longitude.toFixed(4)}°`;
+                }
+            }
+
+            if (data.raw_track_data?.length > 0) {
+                const last = data.raw_track_data[data.raw_track_data.length - 1];
+                
+                // Fallback: Use raw_track_data if current_position doesn't have speed/heading
+                if (!pos?.ground_speed_knots && last.gs) {
+                    document.getElementById('stat-speed').textContent = `${Math.round(last.gs)} kts`;
+                }
+                
+                if (pos?.heading === undefined && data.raw_track_data.length > 1) {
+                    const prev = data.raw_track_data[data.raw_track_data.length - 2];
+                    if (last.coord && prev.coord) {
+                        const heading = Math.round((Math.atan2(last.coord[0] - prev.coord[0], last.coord[1] - prev.coord[1]) * 180 / Math.PI + 360) % 360);
+                        document.getElementById('stat-heading').textContent = `${heading}°`;
+                    }
+                }
+
+                // Flight time
+                const duration = last.timestamp - data.raw_track_data[0].timestamp;
+                const h = Math.floor(duration / 3600);
+                const m = Math.floor((duration % 3600) / 60);
+                document.getElementById('metric-time').textContent = `${h}h ${m}m`;
+            }
+
+            if (data.route?.length > 0) {
+                const progress = Math.min(95, (data.route.length / (data.route.length + 100)) * 100);
+                document.getElementById('route-progress').style.width = `${progress}%`;
+                document.getElementById('route-plane').style.left = `${progress}%`;
+            }
+
+            document.getElementById('track-count').textContent = data.raw_track_data?.length || 0;
+            document.getElementById('info-points').textContent = data.raw_track_data?.length || 0;
+            document.getElementById('update-time').textContent = new Date().toLocaleTimeString();
+            document.getElementById('info-update').textContent = new Date().toLocaleTimeString();
+
+            updateTrackList(data.raw_track_data);
+            updateMap(data);
+        }
+
+        // Track list
+        function updateTrackList(tracks) {
+            if (!tracks) return;
+            const container = document.getElementById('track-list');
+            container.innerHTML = '';
+            
+            tracks.slice(-25).reverse().forEach((t, i) => {
+                const idx = tracks.length - 1 - i;
+                const time = t.timestamp ? new Date(t.timestamp * 1000).toLocaleTimeString() : '--:--';
+                const coords = t.coord ? `${t.coord[1].toFixed(2)}°, ${t.coord[0].toFixed(2)}°` : '---';
+                const alt = t.alt ? `FL${Math.round(t.alt)}` : '';
+                
+                const div = document.createElement('div');
+                div.className = 'track-item' + (i === 0 ? ' active' : '');
+                div.innerHTML = `<span class="track-time">${time}</span><span class="track-coords">${coords}</span><span class="track-alt">${alt}</span>`;
+                div.onclick = () => goToPoint(idx);
+                container.appendChild(div);
+            });
+        }
+
+        function goToPoint(idx) {
+            if (!flightData?.raw_track_data) return;
+            const pt = flightData.raw_track_data[idx];
+            if (pt?.coord) {
+                map.setView([pt.coord[1], pt.coord[0]], 6);
+                document.getElementById('tl-slider').value = (idx / (flightData.raw_track_data.length - 1)) * 100;
+                updateReplayPos(idx);
+            }
+        }
+
+        // Update map
+        function updateMap(data) {
+            if (!map || !data) return;
+
+            if (flightPath) map.removeLayer(flightPath);
+            if (targetMarker) map.removeLayer(targetMarker);
+            if (originMarker) map.removeLayer(originMarker);
+            if (destMarker) map.removeLayer(destMarker);
+
+            if (data.route?.length > 0 && showRoute) {
+                const latlngs = data.route.map(c => [c[1], c[0]]);
+                flightPath = L.polyline(latlngs, {
+                    color: '#00d4ff',
+                    weight: 2,
+                    opacity: 0.7
+                }).addTo(map);
+            }
+
+            if (data.origin && data.route?.[0]) {
+                originMarker = L.marker([data.route[0][1], data.route[0][0]], {
+                    icon: createAirportIcon(data.origin, true)
+                }).addTo(map);
+            }
+
+            if (data.destination && data.route?.length > 0) {
+                const last = data.route[data.route.length - 1];
+                destMarker = L.marker([last[1], last[0]], {
+                    icon: createAirportIcon(data.destination, false)
+                }).addTo(map);
+            }
+
+            const pos = data.current_position;
+            if (pos?.latitude && pos?.longitude) {
+                let heading = 90;
+                if (data.raw_track_data?.length > 1) {
+                    const l = data.raw_track_data[data.raw_track_data.length - 1];
+                    const p = data.raw_track_data[data.raw_track_data.length - 2];
+                    if (l.coord && p.coord) {
+                        heading = Math.atan2(l.coord[0] - p.coord[0], l.coord[1] - p.coord[1]) * 180 / Math.PI;
+                    }
+                }
+
+                targetMarker = L.marker([pos.latitude, pos.longitude], {
+                    icon: createAircraftIcon(heading)
+                }).addTo(map);
+
+                targetMarker.bindPopup(`
+                    <div class="popup-header">${data.flight_id}</div>
+                    <div class="popup-row"><span class="popup-label">Route</span><span class="popup-value">${data.origin} → ${data.destination}</span></div>
+                    <div class="popup-row"><span class="popup-label">Aircraft</span><span class="popup-value">${data.aircraft_type}</span></div>
+                    <div class="popup-row"><span class="popup-label">Altitude</span><span class="popup-value">${pos.altitude_feet || '---'} ft</span></div>
+                `);
+            }
+        }
+
+        function focusTarget() {
+            if (!flightData?.current_position) return;
+            const p = flightData.current_position;
+            if (p.latitude && p.longitude) map.setView([p.latitude, p.longitude], 6);
+            document.getElementById('btn-track').classList.add('active');
+            document.getElementById('btn-route').classList.remove('active');
+        }
+
+        function toggleRoute() {
+            showRoute = !showRoute;
+            document.getElementById('btn-route').classList.toggle('active', showRoute);
+            if (flightData) { updateMap(flightData); if (showRoute) fitRoute(); }
+        }
+
+        function fitRoute() {
+            if (flightPath) map.fitBounds(flightPath.getBounds(), { padding: [50, 50] });
+        }
+
+        function toggleReplay() {
+            const tl = document.getElementById('timeline');
+            document.getElementById('btn-replay').classList.toggle('active');
+            tl.classList.toggle('visible');
+            if (tl.classList.contains('visible')) initReplay();
+            else stopPlay();
+        }
+
+        function initReplay() {
+            if (!flightData?.raw_track_data) return;
+            const tracks = flightData.raw_track_data;
+            document.getElementById('tl-slider').max = tracks.length - 1;
+            document.getElementById('tl-slider').value = tracks.length - 1;
+            
+            if (tracks.length > 1) {
+                const dur = tracks[tracks.length - 1].timestamp - tracks[0].timestamp;
+                const h = Math.floor(dur / 3600), m = Math.floor((dur % 3600) / 60), s = dur % 60;
+                document.getElementById('tl-duration').textContent = `Duration: ${h}h ${m}m ${s}s`;
+            }
+            updateReplayPos(tracks.length - 1);
+        }
+
+        function updateReplayPos(idx) {
+            if (!flightData?.raw_track_data) return;
+            const tracks = flightData.raw_track_data;
+            if (idx < 0 || idx >= tracks.length) return;
+            
+            replayIdx = idx;
+            const pt = tracks[idx];
+            const pct = (idx / (tracks.length - 1)) * 100;
+            document.getElementById('tl-progress').style.width = `${pct}%`;
+            
+            if (pt.timestamp) {
+                const elapsed = pt.timestamp - tracks[0].timestamp;
+                const h = Math.floor(elapsed / 3600), m = Math.floor((elapsed % 3600) / 60), s = elapsed % 60;
+                document.getElementById('tl-time').textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            }
+            document.getElementById('tl-point').textContent = `Point ${idx + 1} / ${tracks.length}`;
+            
+            if (pt.coord) {
+                let heading = 90;
+                if (idx > 0 && tracks[idx-1].coord) {
+                    heading = Math.atan2(pt.coord[0] - tracks[idx-1].coord[0], pt.coord[1] - tracks[idx-1].coord[1]) * 180 / Math.PI;
+                }
+                
+                if (replayMarker) {
+                    replayMarker.setLatLng([pt.coord[1], pt.coord[0]]);
+                    replayMarker.setIcon(createAircraftIcon(heading, '#00bfa5'));
+                } else {
+                    replayMarker = L.marker([pt.coord[1], pt.coord[0]], { icon: createAircraftIcon(heading, '#00bfa5') }).addTo(map);
+                }
+                
+                if (replayPath) map.removeLayer(replayPath);
+                replayPath = L.polyline(tracks.slice(0, idx + 1).map(p => [p.coord[1], p.coord[0]]), {
+                    color: '#00bfa5',
+                    weight: 3,
+                    opacity: 0.9
+                }).addTo(map);
+                
+                if (isPlaying) map.panTo([pt.coord[1], pt.coord[0]], { animate: true, duration: 0.3 });
+            }
+        }
+
+        function seekReplay(val) { updateReplayPos(parseInt(val)); }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('play-btn');
+            btn.innerHTML = isPlaying ? '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>' : '<svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>';
+            btn.classList.toggle('playing', isPlaying);
+            isPlaying ? startPlay() : stopPlay();
+        }
+
+        function startPlay() {
+            if (!flightData?.raw_track_data) return;
+            if (replayIdx >= flightData.raw_track_data.length - 1) replayIdx = 0;
+            replayTimer = setInterval(() => {
+                if (replayIdx < flightData.raw_track_data.length - 1) {
+                    replayIdx++;
+                    document.getElementById('tl-slider').value = replayIdx;
+                    updateReplayPos(replayIdx);
+                } else {
+                    stopPlay();
+                    document.getElementById('play-btn').innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>';
+                    document.getElementById('play-btn').classList.remove('playing');
+                    isPlaying = false;
+                }
+            }, 100 / replaySpeed);
+        }
+
+        function stopPlay() { if (replayTimer) { clearInterval(replayTimer); replayTimer = null; } }
+        function replayStep(d) { if (!flightData?.raw_track_data) return; const n = Math.max(0, Math.min(flightData.raw_track_data.length - 1, replayIdx + d)); document.getElementById('tl-slider').value = n; updateReplayPos(n); }
+        function setSpeed(v) { replaySpeed = parseFloat(v); if (isPlaying) { stopPlay(); startPlay(); } }
+
+        async function refreshData() {
+            document.getElementById('loading').classList.remove('hidden');
+            const data = await fetchData();
+            if (data) updateUI(data);
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        async function init() {
+            initMap();
+            const data = await fetchData();
+            if (data) { updateUI(data); fitRoute(); }
+            document.getElementById('loading').classList.add('hidden');
+            setInterval(async () => { const d = await fetchData(); if (d) updateUI(d); }, 30000);
+        }
+
+        init();
     </script>
 </body>
-
 </html>
