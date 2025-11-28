@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Flight Tracker - GTI657</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .info {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Flight Tracker: GTI657</h1>
+    <div class="info" id="flight-info">Loading...</div>
+    <div id="map"></div>
+
+    <script>
+        const map = L.map('map').setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const planeIcon = L.icon({
+            iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Airplane_silhouette.svg/1024px-Airplane_silhouette.svg.png',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
+        let planeMarker = null;
+        let flightPath = null;
+
+        async function updateData() {
+            try {
+                const response = await fetch('/api/flight-data');
+                const data = await response.json();
+
+                if (data.error) {
+                    document.getElementById('flight-info').innerHTML = `<span style="color: red;">Error: ${data.error}</span>`;
+                    return;
+                }
+
+                const pos = data.current_position;
+                const altFt = pos.altitude_feet || 'N/A';
+
+                document.getElementById('flight-info').innerHTML =
+                    `<strong>Flight:</strong> ${data.flight_id} | 
+                     <strong>Origin:</strong> ${data.origin || 'N/A'} | 
+                     <strong>Dest:</strong> ${data.destination || 'N/A'} | 
+                     <strong>Type:</strong> ${data.aircraft_type || 'N/A'}<br>
+                     <strong>Altitude:</strong> ${altFt} ft`;
+
+                // Draw route if available
+                if (data.route && data.route.length > 0) {
+                    // Remove old path if exists
+                    if (flightPath) {
+                        map.removeLayer(flightPath);
+                    }
+
+                    // Draw route polyline (lon, lat format from FlightAware)
+                    const latLngs = data.route.map(coord => [coord[1], coord[0]]);
+                    flightPath = L.polyline(latLngs, { color: 'blue', weight: 2 }).addTo(map);
+
+                    // Fit map to show entire route
+                    map.fitBounds(flightPath.getBounds());
+                }
+
+                // Update current position marker
+                if (pos.latitude && pos.longitude) {
+                    const lat = pos.latitude;
+                    const lon = pos.longitude;
+
+                    // Remove old marker if exists
+                    if (planeMarker) {
+                        map.removeLayer(planeMarker);
+                    }
+
+                    // Add new marker
+                    planeMarker = L.marker([lat, lon], { icon: planeIcon }).addTo(map);
+                    planeMarker.bindPopup(`<b>${data.flight_id}</b><br>Alt: ${altFt} ft`);
+
+                    document.getElementById('flight-info').innerHTML += `<br><strong>Position:</strong> ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`;
+                } else {
+                    document.getElementById('flight-info').innerHTML += '<br><span style="color: orange;">⚠️ No current position data available</span>';
+                }
+            } catch (e) {
+                console.error("Error fetching data:", e);
+                document.getElementById('flight-info').innerHTML = `<span style="color: red;">Error: ${e.message}</span>`;
+            }
+        }
+
+        updateData();
+        setInterval(updateData, 30000); // Update every 30s
+    </script>
+</body>
+
+</html>
